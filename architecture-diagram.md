@@ -1,6 +1,6 @@
-# 3-Tier Architecture Diagram
+# ECS/Fargate Microservices 3-Tier Architecture
 
-## ASCII Architecture Diagram
+## Containerized Microservices Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -35,28 +35,34 @@
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                           │
 │  ┌─────────────────────────────────┴───────────────────────────────────────┐   │
-│  │                    TIER 1: PRESENTATION LAYER                          │   │
+│  │                    TIER 1: WEB MICROSERVICES                           │   │
 │  │                        PRIVATE SUBNETS                                 │   │
 │  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                │   │
 │  │  │     AZ-A    │    │     AZ-B    │    │     AZ-C    │                │   │
 │  │  │             │    │             │    │             │                │   │
 │  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │                │   │
-│  │  │ │Web Srv  │ │    │ │Web Srv  │ │    │ │Web Srv  │ │                │   │
-│  │  │ │EC2/ECS  │ │    │ │EC2/ECS  │ │    │ │EC2/ECS  │ │                │   │
+│  │  │ │Frontend │ │    │ │Frontend │ │    │ │Frontend │ │                │   │
+│  │  │ │Fargate  │ │    │ │Fargate  │ │    │ │Fargate  │ │                │   │
+│  │  │ │Tasks    │ │    │ │Tasks    │ │    │ │Tasks    │ │                │   │
 │  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │                │   │
 │  │  └─────────────┘    └─────────────┘    └─────────────┘                │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                           │
 │  ┌─────────────────────────────────┴───────────────────────────────────────┐   │
-│  │                    TIER 2: APPLICATION LAYER                           │   │
+│  │                  TIER 2: DWP APPLICATION MICROSERVICES                │   │
 │  │                        PRIVATE SUBNETS                                 │   │
 │  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                │   │
 │  │  │     AZ-A    │    │     AZ-B    │    │     AZ-C    │                │   │
 │  │  │             │    │             │    │             │                │   │
 │  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │                │   │
-│  │  │ │App Srv  │ │    │ │App Srv  │ │    │ │App Srv  │ │                │   │
-│  │  │ │EC2/ECS  │ │    │ │EC2/ECS  │ │    │ │EC2/ECS  │ │                │   │
-│  │  │ │Lambda   │ │    │ │Lambda   │ │    │ │Lambda   │ │                │   │
+│  │  │ │Citizen  │ │    │ │Benefits │ │    │ │Address  │ │                │   │
+│  │  │ │Service  │ │    │ │Service  │ │    │ │Service  │ │                │   │
+│  │  │ │Fargate  │ │    │ │Fargate  │ │    │ │Fargate  │ │                │   │
+│  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │                │   │
+│  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │                │   │
+│  │  │ │Identity │ │    │ │Claims   │ │    │ │External │ │                │   │
+│  │  │ │Service  │ │    │ │Service  │ │    │ │API      │ │                │   │
+│  │  │ │Fargate  │ │    │ │Fargate  │ │    │ │Gateway  │ │                │   │
 │  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │                │   │
 │  │  └─────────────┘    └─────────────┘    └─────────────┘                │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
@@ -70,56 +76,93 @@
 │  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │                │   │
 │  │  │ │RDS      │ │    │ │RDS      │ │    │ │ElastiC  │ │                │   │
 │  │  │ │Primary  │ │    │ │Standby  │ │    │ │Cache    │ │                │   │
-│  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │                │   │
-│  │  │             │    │             │    │             │                │   │
-│  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ ┌─────────┐ │                │   │
-│  │  │ │Read     │ │    │ │Read     │ │    │ │S3       │ │                │   │
-│  │  │ │Replica  │ │    │ │Replica  │ │    │ │Buckets  │ │                │   │
-│  │  │ └─────────┘ │    │ └─────────┘ │    │ └─────────┘ │                │   │
-│  │  └─────────────┘    └─────────────┘    └─────────────┘                │   │
+│  │  │ └─────────┘ │    │ └─────────┘ │    │ │Redis    │ │                │   │
+│  │  │ ┌─────────┐ │    │ ┌─────────┐ │    │ └─────────┘ │                │   │
+│  │  │ │DynamoDB │ │    │ │DynamoDB │ │    │ ┌─────────┐ │                │   │
+│  │  │ │Sessions │ │    │ │Global   │ │    │ │S3       │ │                │   │
+│  │  │ └─────────┘ │    │ │Tables   │ │    │ │Buckets  │ │                │   │
+│  │  └─────────────┘    │ └─────────┘ │    │ └─────────┘ │                │   │
+│  │                    └─────────────┘    └─────────────┘                │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           SUPPORTING SERVICES                                  │
+│                      CONTAINER ORCHESTRATION & SERVICES                        │
 │                                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │
-│  │ CloudWatch  │  │   X-Ray     │  │ GuardDuty   │  │   Config    │           │
-│  │ Monitoring  │  │  Tracing    │  │ Security    │  │ Compliance  │           │
+│  │    ECS      │  │   ECR       │  │ Service     │  │   X-Ray     │           │
+│  │  Cluster    │  │ Container   │  │ Discovery   │  │  Tracing    │           │
+│  │             │  │ Registry    │  │             │  │             │           │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘           │
 │                                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │
-│  │    IAM      │  │    KMS      │  │  Secrets    │  │   Backup    │           │
-│  │   Roles     │  │Encryption   │  │  Manager    │  │  Service    │           │
+│  │ CloudWatch  │  │    KMS      │  │  Secrets    │  │   Config    │           │
+│  │ Container   │  │Encryption   │  │  Manager    │  │ Compliance  │           │
+│  │ Insights    │  │             │  │             │  │             │           │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘           │
 │                                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │
-│  │CodePipeline │  │ CloudTrail  │  │OpenSearch   │  │   Route53   │           │
-│  │   CI/CD     │  │   Audit     │  │    Logs     │  │     DNS     │           │
+│  │CodePipeline │  │ API Gateway │  │   SQS/SNS   │  │   Route53   │           │
+│  │   CI/CD     │  │   REST      │  │ Messaging   │  │     DNS     │           │
+│  │             │  │             │  │             │  │             │           │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘           │
+│                                                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │
+│  │ Royal Mail  │  │   HMRC      │  │    NHS      │  │  GOV.UK     │           │
+│  │ Address API │  │   APIs      │  │   APIs      │  │  Verify     │           │
+│  │             │  │             │  │             │  │             │           │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘           │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Data Flow
+## DWP Microservices Data Flow
 
-1. **User Request** → CloudFront → WAF → ALB (Public)
-2. **Web Tier** → Internal ALB → Application Tier
-3. **Application Tier** → RDS/ElastiCache → Data Processing
-4. **Response** ← Reverse path with caching at each layer
+1. **Citizen Request** → CloudFront → WAF → ALB → Frontend Fargate Tasks
+2. **Frontend** → Service Discovery → API Gateway → DWP Backend Services
+3. **Benefits Processing** → Claims Service → External APIs (HMRC/NHS)
+4. **Address Validation** → Address Service → Royal Mail API
+5. **Identity Verification** → Identity Service → GOV.UK Verify
+6. **Async Processing** → SQS/SNS → Lambda (notifications, batch jobs)
+7. **Inter-service Communication** → Service Mesh → Load Balancing
+
+## Microservices Architecture
+
+### Frontend Tier (Fargate)
+- **React/Angular SPA**: Containerized web applications
+- **Auto Scaling**: Based on CPU/memory and request metrics
+- **Service Discovery**: ECS Service Discovery for dynamic endpoints
+
+### DWP Application Tier Microservices
+- **Citizen Service**: Citizen registration, profile management
+- **Identity Service**: GOV.UK Verify integration, authentication
+- **Benefits Service**: Universal Credit, JSA, ESA processing
+- **Claims Service**: Benefit claims workflow, assessments
+- **Address Service**: Royal Mail API integration, address validation
+- **External API Gateway**: Third-party integrations (HMRC, NHS, etc.)
+
+### Container Orchestration
+- **ECS Fargate**: Serverless container execution
+- **ECR**: Private container registry
+- **Service Discovery**: DNS-based service location
+- **App Mesh**: Service mesh for microservices communication
 
 ## Security Boundaries
 
-- **Internet Gateway**: Public subnet access only
-- **NAT Gateway**: Outbound internet for private subnets
-- **Security Groups**: Instance-level firewall rules
-- **NACLs**: Subnet-level access control
-- **IAM Roles**: Service-to-service authentication
-- **VPC Endpoints**: Private AWS service access
+- **Container Security**: IAM roles per task, least privilege
+- **Network Isolation**: Security groups per microservice
+- **Secrets Management**: AWS Secrets Manager for DB credentials
+- **Image Scanning**: ECR vulnerability scanning
+- **Service-to-Service**: mTLS via App Mesh
 
-## Auto Scaling Triggers
+## Auto Scaling Configuration
 
-- **CPU Utilization**: > 70% scale out, < 30% scale in
-- **Memory Usage**: > 80% scale out, < 40% scale in
-- **Request Count**: > 1000 req/min scale out
-- **Response Time**: > 500ms scale out
-- **Custom Metrics**: Application-specific triggers
+### ECS Service Auto Scaling
+- **Target Tracking**: CPU 70%, Memory 80%
+- **Step Scaling**: Request count > 1000/min
+- **Scheduled Scaling**: Predictable traffic patterns
+- **Custom Metrics**: Application-specific KPIs
+
+### Database Scaling
+- **RDS**: Read replicas for read-heavy workloads
+- **DynamoDB**: On-demand scaling for variable traffic
+- **ElastiCache**: Cluster mode for horizontal scaling
